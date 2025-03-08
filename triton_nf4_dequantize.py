@@ -37,7 +37,7 @@ def dequantize_nf4_kernel_simple(
     BLOCK_SIZE: tl.constexpr,
 ):
     """
-    Simple but highly optimized kernel for NF4 dequantization.
+    Simple but highly optimized kernel for NF4 dequantization with custom PTX.
     
     Each thread processes one row for maximum parallelism.
     """
@@ -67,15 +67,27 @@ def dequantize_nf4_kernel_simple(
         # Load packed bytes with cache hint
         packed_bytes = tl.load(weight_ptr + byte_offsets, mask=col_mask, cache_modifier=".ca")
         
+        # Extract high and low nibbles using custom PTX assembly
+        # This is more efficient than using standard bit operations
+        high_nibbles, low_nibbles = tl.inline_asm_elementwise(
+            """
+            // Extract high and low nibbles from packed byte
+            and.b32 $1, $2, 0x0F;        // Extract low 4 bits
+            shr.b32 $0, $2, 4;           // Shift right by 4 bits
+            and.b32 $0, $0, 0x0F;        // Mask to get high 4 bits
+            """,
+            constraints="=r,=r,r",  # Two outputs, one input
+            args=[packed_bytes],
+            dtype=(tl.int32, tl.int32),
+            is_pure=True,
+            pack=1
+        )
+        
         # Determine if we need high or low bits
         is_high_bits = (col_offsets % 2) == 0
         
-        # Extract 4-bit indices
-        indices = tl.where(
-            is_high_bits,
-            (packed_bytes >> 4) & 0xF,  # High 4 bits
-            packed_bytes & 0xF          # Low 4 bits
-        )
+        # Select the appropriate indices
+        indices = tl.where(is_high_bits, high_nibbles, low_nibbles)
         
         # Load values from lookup table with cache hint
         values = tl.load(lut_ptr + indices, mask=col_mask, cache_modifier=".ca")
@@ -101,7 +113,7 @@ def dequantize_nf4_kernel_fast(
     BLOCK_SIZE: tl.constexpr,
 ):
     """
-    Ultra-optimized kernel for large matrices.
+    Ultra-optimized kernel for large matrices with custom PTX.
     
     Uses a 1D grid with vectorized memory access for maximum throughput.
     """
@@ -132,15 +144,27 @@ def dequantize_nf4_kernel_fast(
     # Load packed bytes with cache hint
     packed_bytes = tl.load(weight_ptr + byte_offsets, mask=mask, cache_modifier=".ca")
     
+    # Extract high and low nibbles using custom PTX assembly
+    # This is more efficient than using standard bit operations
+    high_nibbles, low_nibbles = tl.inline_asm_elementwise(
+        """
+        // Extract high and low nibbles from packed byte
+        and.b32 $1, $2, 0x0F;        // Extract low 4 bits
+        shr.b32 $0, $2, 4;           // Shift right by 4 bits
+        and.b32 $0, $0, 0x0F;        // Mask to get high 4 bits
+        """,
+        constraints="=r,=r,r",  # Two outputs, one input
+        args=[packed_bytes],
+        dtype=(tl.int32, tl.int32),
+        is_pure=True,
+        pack=1
+    )
+    
     # Determine if we need high or low bits
     is_high_bits = (col_idx % 2) == 0
     
-    # Extract 4-bit indices
-    indices = tl.where(
-        is_high_bits,
-        (packed_bytes >> 4) & 0xF,  # High 4 bits
-        packed_bytes & 0xF          # Low 4 bits
-    )
+    # Select the appropriate indices
+    indices = tl.where(is_high_bits, high_nibbles, low_nibbles)
     
     # Load values from lookup table with cache hint
     values = tl.load(lut_ptr + indices, mask=mask, cache_modifier=".ca")
