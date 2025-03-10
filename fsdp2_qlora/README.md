@@ -9,15 +9,14 @@ This directory contains a working implementation of Fully Sharded Data Parallel 
 1. **Memory Efficiency**: Combines sharding, quantization, and LoRA to fit large models on limited hardware
 2. **Scalability**: Scales to multiple GPUs with efficient communication patterns
 3. **Training Stability**: Handles quantized weights properly to avoid numerical issues
-4. **Checkpoint Compatibility**: Custom saving ensures checkpoints can be loaded correctly
-5. **Resource Utilization**: Maximizes GPU utilization while minimizing memory footprint
+4. **Resource Utilization**: Maximizes GPU utilization while minimizing memory footprint
 
 ### Challenges
 
 1. **Implementation Complexity**: Requires careful coordination between FSDP, quantization, and LoRA
 2. **Serialization Issues**: Custom handling needed for non-serializable components in checkpoints
 3. **Debugging Difficulty**: Distributed training errors can be harder to diagnose
-4. **Version Dependencies**: Sensitive to specific versions of PyTorch, PEFT, and other libraries
+4. **Checkpoint Compatibility**: Not working as of now, maybe due to lack of space in T4 (investigating)
 5. **Performance Overhead**: Some communication overhead compared to single-GPU training
 
 ## Implementation Notes
