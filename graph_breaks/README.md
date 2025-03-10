@@ -4,7 +4,7 @@ This directory contains analysis and solutions for handling graph breaks in PyTo
 
 ## Pros and Cons
 
-### Pros of Our Approach
+### Pros 
 
 1. **Performance Gains**: Successfully eliminating graph breaks can yield 2-10x speedups
 2. **Memory Efficiency**: Compiled graphs often use less memory than eager execution
@@ -28,9 +28,3 @@ This directory contains analysis and solutions for handling graph breaks in PyTo
 4. Consider using `torch._dynamo.optimize("inductor")` for more control
 5. Benchmark before and after fixing each break to measure impact
 6. Keep eager-mode fallbacks for debugging purposes
-
-## Further Resources
-
-- [PyTorch Dynamo Documentation](https://pytorch.org/docs/stable/dynamo/)
-- [TorchInductor](https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir/747)
-- [Troubleshooting torch.compile](https://pytorch.org/docs/stable/dynamo/troubleshooting.html) 
