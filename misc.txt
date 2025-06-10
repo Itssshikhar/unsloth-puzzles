@@ -1,0 +1,7 @@
+// -------------------------- GPT/Cursor Prompt ---------------------------------------
+
+Reflect on 5-7 different possible sources of the problem, distill those down to 1-2 most likely sources, and then add logs to validate your assumptions before we move onto implementing the actual code fix
+
+I am doing something very fundamentally wrong in @kaggle_nf4_triton_v1.py that is the reason I'm getting this error. You'll only get one chance to solve this in one go. You can do whatever you want, without changing the inherent behaviour of the code. Go ahead.
+
+// ------------------------------------------------------------------------------------

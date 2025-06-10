@@ -279,12 +279,26 @@ if HAS_DEPENDENCIES:
             quant_type="nf4",
         )
 
+    def assert_correct_bnb(weight, dtype):
+        assert(weight.weight.dtype == torch.uint8)
+        assert(weight.weight.quant_state.dtype == dtype)
+        assert(weight.weight.quant_state.absmax.dtype == torch.uint8)
+        assert(weight.weight.quant_state.code.dtype == torch.float32)
+        assert(weight.weight.quant_state.offset.dtype == torch.float32)
+        assert(weight.weight.quant_state.blocksize == 64)
+        assert(weight.weight.quant_state.state2.absmax.dtype == torch.float32)
+        assert(weight.weight.quant_state.state2.code.dtype == torch.float32)
+        assert(weight.weight.quant_state.state2.blocksize == 256)
+
     class MLP(torch.nn.Module):
         def __init__(self, hd=4096, m=14336, dtype=torch.float16):
             super().__init__()
-            self.gate_proj = bnb_Linear4bit(hd, m, dtype=dtype)
-            self.up_proj = bnb_Linear4bit(hd, m, dtype=dtype)
-            self.down_proj = bnb_Linear4bit(m, hd, dtype=dtype)
+            self.gate_proj = bnb_Linear4bit(hd, m, dtype=dtype).to("cuda")
+            self.up_proj = bnb_Linear4bit(hd, m, dtype=dtype).to("cuda")
+            self.down_proj = bnb_Linear4bit(m, hd, dtype=dtype).to("cuda")
+            self.gate_proj.weight.quant_state.dtype = dtype
+            self.up_proj.weight.quant_state.dtype = dtype
+            self.down_proj.weight.quant_state.dtype = dtype
             self.act_fn = ACT2FN["silu"]
 
         def forward(self, x):
@@ -344,15 +358,18 @@ if HAS_DEPENDENCIES:
         ]
         for (bsz, qlen, hd, m, seed, dt) in options:
             set_seed(seed)
-            torch.set_default_dtype(dt)
-            mlp = MLP(hd=hd, m=m, dtype=dt).to("cuda")
-            X = torch.randn((bsz, qlen, hd), device="cuda")
+            torch.set_default_dtype(torch.float32)
+            mlp = MLP(hd=hd, m=m, dtype=dt)
+            X = torch.randn((bsz, qlen, hd), device="cuda", dtype=dt)
             torch.cuda.synchronize()
 
             # Warmup
             for _ in range(2):
                 assert_same(mlp_forward(X, mlp, dequantize_fx),
                             mlp(X), _F(_C()), dt)
+                assert_correct_bnb(mlp.up_proj, dt)
+                assert_correct_bnb(mlp.gate_proj, dt)
+                assert_correct_bnb(mlp.down_proj, dt)
                 a, b, c = mlp_dequantize(X, mlp, dequantize_fx)
                 A, B, C = mlp_dequantize(X, mlp, unsloth_dequantize)
                 assert_same(a, A, _F(_C()), dt)

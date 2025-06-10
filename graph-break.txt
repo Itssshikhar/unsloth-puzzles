@@ -1,0 +1,25 @@
+Graph break: from user code at:
+V0218 16:38:34.164000 597 torch/_dynamo/symbolic_convert.py:617] [0/0] [__graph_breaks]   File "<ipython-input-3-469958b91514>", line 145, in compiled_mlp_forward
+V0218 16:38:34.164000 597 torch/_dynamo/symbolic_convert.py:617] [0/0] [__graph_breaks]     return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+V0218 16:38:34.164000 597 torch/_dynamo/symbolic_convert.py:617] [0/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/peft/tuners/lora/bnb.py", line 496, in forward
+V0218 16:38:34.164000 597 torch/_dynamo/symbolic_convert.py:617] [0/0] [__graph_breaks]     result = self.base_layer(x, *args, **kwargs)
+V0218 16:38:34.164000 597 torch/_dynamo/symbolic_convert.py:617] [0/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/bitsandbytes/nn/modules.py", line 484, in forward
+V0218 16:38:34.164000 597 torch/_dynamo/symbolic_convert.py:617] [0/0] [__graph_breaks]     return bnb.matmul_4bit(x, self.weight.t(), bias=bias, quant_state=self.weight.quant_state).to(inp_dtype)
+
+Graph break: from user code at:
+V0218 16:38:34.229000 597 torch/_dynamo/symbolic_convert.py:617] [1/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/peft/tuners/lora/bnb.py", line 496, in forward
+V0218 16:38:34.229000 597 torch/_dynamo/symbolic_convert.py:617] [1/0] [__graph_breaks]     result = self.base_layer(x, *args, **kwargs)
+V0218 16:38:34.229000 597 torch/_dynamo/symbolic_convert.py:617] [1/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/bitsandbytes/nn/modules.py", line 484, in forward
+V0218 16:38:34.229000 597 torch/_dynamo/symbolic_convert.py:617] [1/0] [__graph_breaks]     return bnb.matmul_4bit(x, self.weight.t(), bias=bias, quant_state=self.weight.quant_state).to(inp_dtype)
+
+Graph break: from user code at:
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/bitsandbytes/autograd/_functions.py", line 533, in matmul_4bit
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]     return MatMul4Bit.apply(A, B, out, bias, quant_state)
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/bitsandbytes/autograd/_functions.py", line 462, in forward
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]     output = torch.nn.functional.linear(A, F.dequantize_4bit(B, quant_state).to(A.dtype).t(), bias)
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/bitsandbytes/functional.py", line 1352, in dequantize_4bit
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]     absmax = dequantize_blockwise(quant_state.absmax, quant_state.state2)
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/bitsandbytes/functional.py", line 1029, in dequantize_blockwise
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]     get_ptr(quant_state.code),
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]   File "/usr/local/lib/python3.11/dist-packages/bitsandbytes/functional.py", line 497, in get_ptr
+V0218 16:38:37.928000 597 torch/_dynamo/symbolic_convert.py:617] [5/0] [__graph_breaks]     return ct.c_void_p(A.data_ptr())
